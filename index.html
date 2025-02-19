@@ -3,52 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Audio Book Player</title>
+  <title>Audio Player</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f4f4f9;
       text-align: center;
+      background-color: #f4f4f9;
+      padding: 20px;
     }
-
-    h1 {
-      color: #333;
-    }
-
-    select, audio, button {
+    select, audio {
       width: 100%;
       max-width: 400px;
       margin: 10px auto;
-      padding: 10px;
       display: block;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-
-    button {
-      background-color: #007bff;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #audioPlayer {
-      width: 100%;
-      max-width: 400px;
     }
   </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-  <h1>Audio Book Player</h1>
+  <h1>Audio Player</h1>
 
   <select id="subjectDropdown">
     <option>Select Subject</option>
@@ -59,77 +32,70 @@
   </select>
 
   <select id="quizDropdown" disabled>
-    <option>Select Audio</option>
+    <option>Select Quiz</option>
   </select>
 
-  <audio id="audioPlayer" controls>
-    Your browser does not support the audio element.
-  </audio>
+  <audio id="audioPlayer" controls controlsList="nodownload"></audio>
 
   <script>
-    // JSON फाइल से डेटा लोड करें
-    fetch("gsaudiobookfolder_structure.json")
-      .then(response => response.json())
-      .then(data => {
-        const subjectDropdown = document.getElementById("subjectDropdown");
-        const partDropdown = document.getElementById("partDropdown");
-        const quizDropdown = document.getElementById("quizDropdown");
-        const audioPlayer = document.getElementById("audioPlayer");
+    document.addEventListener("DOMContentLoaded", function () {
+      document.addEventListener("contextmenu", function (event) {
+        event.preventDefault(); // Right Click Disable
+      });
 
-        // विषय लोड करें
-        for (const subject in data) {
-          const option = document.createElement("option");
-          option.value = subject;
-          option.textContent = subject;
-          subjectDropdown.appendChild(option);
-        }
+      fetch("gsaudiobookfolder_structure.json")
+        .then(response => response.json())
+        .then(data => {
+          const subjectDropdown = document.getElementById("subjectDropdown");
+          const partDropdown = document.getElementById("partDropdown");
+          const quizDropdown = document.getElementById("quizDropdown");
+          const audioPlayer = document.getElementById("audioPlayer");
 
-        subjectDropdown.addEventListener("change", () => {
-          const selectedSubject = subjectDropdown.value;
-          partDropdown.innerHTML = "<option>Select Part</option>";
-          quizDropdown.innerHTML = "<option>Select Audio</option>";
-          quizDropdown.disabled = true;
-          audioPlayer.src = "";
-          if (selectedSubject !== "Select Subject") {
-            partDropdown.disabled = false;
+          for (const subject in data) {
+            const option = document.createElement("option");
+            option.value = subject;
+            option.textContent = subject;
+            subjectDropdown.appendChild(option);
+          }
 
-            // पार्ट्स लोड करें
-            for (const part in data[selectedSubject]) {
-              const option = document.createElement("option");
-              option.value = part;
-              option.textContent = part;
-              partDropdown.appendChild(option);
+          subjectDropdown.addEventListener("change", () => {
+            partDropdown.innerHTML = "<option>Select Part</option>";
+            quizDropdown.innerHTML = "<option>Select Quiz</option>";
+            quizDropdown.disabled = true;
+            audioPlayer.src = "";
+            if (subjectDropdown.value !== "Select Subject") {
+              partDropdown.disabled = false;
+              for (const part in data[subjectDropdown.value]) {
+                const option = document.createElement("option");
+                option.value = part;
+                option.textContent = part;
+                partDropdown.appendChild(option);
+              }
             }
-          }
-        });
+          });
 
-        partDropdown.addEventListener("change", () => {
-          const selectedSubject = subjectDropdown.value;
-          const selectedPart = partDropdown.value;
-          quizDropdown.innerHTML = "<option>Select Audio</option>";
-          audioPlayer.src = "";
-          if (selectedPart !== "Select Part") {
-            quizDropdown.disabled = false;
-
-            // ऑडियो लोड करें
-            for (const quiz in data[selectedSubject][selectedPart]) {
-              const option = document.createElement("option");
-              option.value = data[selectedSubject][selectedPart][quiz];
-              option.textContent = quiz;
-              quizDropdown.appendChild(option);
+          partDropdown.addEventListener("change", () => {
+            quizDropdown.innerHTML = "<option>Select Quiz</option>";
+            audioPlayer.src = "";
+            if (partDropdown.value !== "Select Part") {
+              quizDropdown.disabled = false;
+              for (const quiz in data[subjectDropdown.value][partDropdown.value]) {
+                const option = document.createElement("option");
+                option.value = data[subjectDropdown.value][partDropdown.value][quiz];
+                option.textContent = quiz;
+                quizDropdown.appendChild(option);
+              }
             }
-          }
-        });
+          });
 
-        quizDropdown.addEventListener("change", () => {
-          const selectedAudio = quizDropdown.value;
-          if (selectedAudio !== "Select Audio") {
-            audioPlayer.src = selectedAudio;
-            audioPlayer.play();
-          }
-        });
-      })
-      .catch(error => console.error("Error loading JSON:", error));
+          quizDropdown.addEventListener("change", () => {
+            if (quizDropdown.value !== "Select Quiz") {
+              audioPlayer.src = quizDropdown.value;
+            }
+          });
+        })
+        .catch(error => console.error("Error loading JSON:", error));
+    });
   </script>
 
 </body>
